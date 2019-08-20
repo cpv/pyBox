@@ -10,7 +10,7 @@ from typing import List
 class Vec3D(object):
 
     def __str__(self):
-        return 'x:' + str(self.x) + ' y:' + str(self.y) + 'z:' + str(self.z)
+        return 'x:' + str(self.x) + ' y:' + str(self.y) + ' z:' + str(self.z)
 
     def __init__(self, x, y, z):
         self.x = x
@@ -23,12 +23,10 @@ class Vec3D(object):
 
 class Tri(object):
 
-    emptyVec = Vec3D(0, 0, 0)
-
     def __str__(self):
-        return 'p1:' + self.p1.__str__() + ' p2:' + self.p2.__str__() + 'p3:' + self.p3.__str__()
+        return 'p1:' + self.p1.__str__() + ' p2:' + self.p2.__str__() + ' p3:' + self.p3.__str__()
 
-    def __init__(self, p1=emptyVec, p2=emptyVec, p3=emptyVec):
+    def __init__(self, p1=Vec3D(0, 0, 0), p2=Vec3D(0, 0, 0), p3=Vec3D(0, 0, 0)):
         self.p1 = p1
         self.p2 = p2
         self.p3 = p3
@@ -87,9 +85,9 @@ class RenderMath(object):
     ffar = 1000.0
     ffov = 90.0
 
-    fScreenWidth = 500
-    fScreenHeight = 500
-    faspectRatio = float(fScreenHeight)/float(fScreenWidth)
+    fScreenWidth = 500.0
+    fScreenHeight = 500.0
+    faspectRatio = fScreenHeight/fScreenWidth
     ffovRad = 1.0 / tan(ffov * 0.5/180 * pi)
     matrix = []
 
@@ -99,6 +97,7 @@ class RenderMath(object):
         w, h = 4, 4
         self.matrix = [[0 for x in range(w)] for y in range(h)]
 
+        print(self.faspectRatio, self.ffovRad)
         self.matrix[0][0] = self.faspectRatio * self.ffovRad
         self.matrix[1][1] = self.ffovRad
         self.matrix[2][2] = self.ffar / (self.ffar - self.fnear)
@@ -118,6 +117,7 @@ class RenderMath(object):
         w = k.x * m[0][3] + k.y * m[1][3] + k.z * m[2][3] + m[3][3]
         # need to normalise back to cartesian space.
 
+        # print(o.x, o.y, o.z, sep=' ')
         if(w != 0):
             o.x /= w
             o.y /= w
@@ -134,10 +134,69 @@ class RenderMath(object):
                 Vec3D(1.0, 1.0, 0.0)
             ),
             Tri(
-                Vec3D(0.0, 0.0, 0.0),
+                Vec3D(1.0, 0.0, 0.0),
                 Vec3D(1.0, 1.0, 0.0),
                 Vec3D(1.0, 0.0, 0.0)
-            )
+            ),
+
+            # east facing tri
+            Tri(
+                Vec3D(1.0, 0.0, 0.0),
+                Vec3D(1.0, 1.0, 0.0),
+                Vec3D(1.0, 1.0, 1.0)
+            ),
+            Tri(
+                Vec3D(1.0, 0.0, 0.0),
+                Vec3D(1.0, 1.0, 1.0),
+                Vec3D(1.0, 0.0, 1.0)
+            ),
+            # north facing tri
+            Tri(
+                Vec3D(1.0, 0.0, 1.0),
+                Vec3D(1.0, 1.0, 1.0),
+                Vec3D(0.0, 1.0, 1.0)
+            ),
+            Tri(
+                Vec3D(1.0, 0.0, 1.0),
+                Vec3D(0.0, 1.0, 1.0),
+                Vec3D(0.0, 0.0, 1.0)
+            ),
+
+            # west facing tri
+            Tri(
+                Vec3D(0.0, 0.0, 1.0),
+                Vec3D(0.0, 1.0, 1.0),
+                Vec3D(0.0, 1.0, 0.0)
+            ),
+            Tri(
+                Vec3D(0.0, 0.0, 1.0),
+                Vec3D(0.0, 1.0, 0.0),
+                Vec3D(0.0, 0.0, 0.0)
+            ),
+
+            # top facing tri
+            Tri(
+                Vec3D(0.0, 1.0, 0.0),
+                Vec3D(0.0, 1.0, 1.0),
+                Vec3D(1.0, 1.0, 1.0)
+            ),
+            Tri(
+                Vec3D(0.0, 1.0, 0.0),
+                Vec3D(1.0, 1.0, 1.0),
+                Vec3D(1.0, 1.0, 0.0)
+            ),
+            # bottom facing tri
+            Tri(
+                Vec3D(1.0, 0.0, 1.0),
+                Vec3D(0.0, 0.0, 1.0),
+                Vec3D(0.0, 0.0, 0.0)
+            ),
+            Tri(
+                Vec3D(1.0, 0.0, 1.0),
+                Vec3D(0.0, 0.0, 0.0),
+                Vec3D(1.0, 0.0, 0.0)
+            ),
+
         ]
 
         mesh = Mesh(vlist)
