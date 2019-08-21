@@ -26,10 +26,11 @@ class Tri(object):
     def __str__(self):
         return 'p1:' + self.p1.__str__() + ' p2:' + self.p2.__str__() + ' p3:' + self.p3.__str__()
 
-    def __init__(self, p1=Vec3D(0, 0, 0), p2=Vec3D(0, 0, 0), p3=Vec3D(0, 0, 0)):
+    def __init__(self, p1=Vec3D(0, 0, 0), p2=Vec3D(0, 0, 0), p3=Vec3D(0, 0, 0), colour="#fb0"):
         self.p1 = p1
         self.p2 = p2
         self.p3 = p3
+        self.colour = colour
 
     @property
     def p1(self):
@@ -90,14 +91,14 @@ class RenderMath(object):
     faspectRatio = fScreenHeight/fScreenWidth
     ffovRad = 1.0 / tan(ffov * 0.5/180 * pi)
     matrix = []
-
+            
     def __init__(self):
         # black boxy projection matrix to do with projecting out 3d points
         # to a space on a 2d plane. We use this primarily for our matrix multiplication.
+
         w, h = 4, 4
         self.matrix = [[0 for x in range(w)] for y in range(h)]
 
-        print(self.faspectRatio, self.ffovRad)
         self.matrix[0][0] = self.faspectRatio * self.ffovRad
         self.matrix[1][1] = self.ffovRad
         self.matrix[2][2] = self.ffar / (self.ffar - self.fnear)
@@ -131,12 +132,14 @@ class RenderMath(object):
             Tri(
                 Vec3D(0.0, 0.0, 0.0),
                 Vec3D(0.0, 1.0, 0.0),
-                Vec3D(1.0, 1.0, 0.0)
+                Vec3D(1.0, 1.0, 0.0),
+                colour="#de4c28"
             ),
             Tri(
                 Vec3D(1.0, 0.0, 0.0),
                 Vec3D(1.0, 1.0, 0.0),
-                Vec3D(1.0, 0.0, 0.0)
+                Vec3D(1.0, 0.0, 0.0),
+                colour="#de9b28"
             ),
 
             # east facing tri

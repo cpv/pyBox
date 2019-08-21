@@ -9,9 +9,19 @@ mw = tk.Tk()
 matrixMath = rm.RenderMath().matrix
 
 
+def save_size(event):
+    with open("pythonRender.conf", "w") as conf:
+        conf.write(mw.geometry())
+
+
 def generate_window():
 
-    mw.geometry(str(int(rm.RenderMath.fScreenWidth)) +
+    with open("pythonRender.conf", "r") as conf:
+        geom = conf.read()
+        if geom:
+            mw.geometry(geom)
+        else:
+            mw.geometry(str(int(rm.RenderMath.fScreenWidth)) +
                 "x" + str(int(rm.RenderMath.fScreenHeight)))
     # mw.resizable(0, 0)
 
@@ -19,6 +29,9 @@ def generate_window():
                      borderwidth=0, highlightthickness=0)
     back.pack_propagate(0)
     back.pack(fill=tk.BOTH, expand=1)
+
+    mw.bind("<Configure>", save_size)
+
     return back
 
 
@@ -33,9 +46,7 @@ class CubeRender(object):
         self.start_time = time.time()
 
     def render_cube(self):
-        print('renderring')
         self.canvas.delete("all")
-
         elapsed_time = time.time() - self.start_time
         self.matRotz[0][0] = cos(elapsed_time)
         self.matRotz[0][1] = sin(elapsed_time)
@@ -79,7 +90,8 @@ class CubeRender(object):
             translatedTri.p2.z = t.p2.z + 4.0
             translatedTri.p3.z = t.p3.z + 4.0
 
-            projectedTri = rm.Tri()
+            projectedTri = deepcopy(translatedTri)
+
             rm.RenderMath.multiplyMatrixVector(
                 translatedTri.p1, projectedTri.p1, matrixMath)
             rm.RenderMath.multiplyMatrixVector(
@@ -105,13 +117,13 @@ class CubeRender(object):
 
             self.canvas.create_line(
                 projectedTri.p1.x, projectedTri.p1.y,
-                projectedTri.p2.x, projectedTri.p2.y,  fill="#fb0")
+                projectedTri.p2.x, projectedTri.p2.y,  fill=projectedTri.colour)
             self.canvas.create_line(
                 projectedTri.p2.x, projectedTri.p2.y,
-                projectedTri.p3.x, projectedTri.p3.y, fill="#fb0")
+                projectedTri.p3.x, projectedTri.p3.y, fill=projectedTri.colour)
             self.canvas.create_line(
                 projectedTri.p3.x, projectedTri.p3.y,
-                projectedTri.p1.x, projectedTri.p1.y, fill="#fb0")
+                projectedTri.p1.x, projectedTri.p1.y, fill=projectedTri.colour)
 
         # time.sleep(0.1)
 
