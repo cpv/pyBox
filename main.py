@@ -22,7 +22,7 @@ def generate_window():
             mw.geometry(geom)
         else:
             mw.geometry(str(int(rm.RenderMath.fScreenWidth)) +
-                "x" + str(int(rm.RenderMath.fScreenHeight)))
+                        "x" + str(int(rm.RenderMath.fScreenHeight)))
     # mw.resizable(0, 0)
 
     back = tk.Canvas(master=mw, bg='black',
@@ -47,19 +47,46 @@ class CubeRender(object):
 
     def render_cube(self):
         self.canvas.delete("all")
-        elapsed_time = time.time() - self.start_time
-        self.matRotz[0][0] = cos(elapsed_time)
-        self.matRotz[0][1] = sin(elapsed_time)
-        self.matRotz[1][0] = -sin(elapsed_time)
-        self.matRotz[1][1] = cos(elapsed_time)
+
+        # #for rendering rotation with elapsed time.
+
+        # elapsed_time = time.time() - self.start_time
+        # elapsed_time /= 3
+
+        # self.matRotz[0][0] = cos(elapsed_time)
+        # self.matRotz[0][1] = sin(elapsed_time)
+        # self.matRotz[1][0] = -sin(elapsed_time)
+        # self.matRotz[1][1] = cos(elapsed_time)
+        # self.matRotz[2][2] = 1
+        # self.matRotz[3][3] = 1
+
+        # self.matRotx[0][0] = 1
+        # self.matRotx[1][1] = cos(elapsed_time*0.5)
+        # self.matRotx[1][2] = sin(elapsed_time*0.5)
+        # self.matRotx[2][1] = -sin(elapsed_time*0.5)
+        # self.matRotx[2][2] = cos(elapsed_time*0.5)
+        # self.matRotx[3][3] = 1
+
+        x = mw.winfo_pointerx()
+        y = mw.winfo_pointery()
+        abs_coord_x = mw.winfo_pointerx() - mw.winfo_vrootx()
+        abs_coord_y = mw.winfo_pointery() - mw.winfo_vrooty()
+
+        abs_coord_x/=100
+        abs_coord_y/=100
+        # for rendering rotation with mousepos.
+        self.matRotz[0][0] = cos(abs_coord_x)
+        self.matRotz[0][1] = sin(abs_coord_x)
+        self.matRotz[1][0] = -sin(abs_coord_x)
+        self.matRotz[1][1] = cos(abs_coord_x)
         self.matRotz[2][2] = 1
         self.matRotz[3][3] = 1
 
         self.matRotx[0][0] = 1
-        self.matRotx[1][1] = cos(elapsed_time*0.5)
-        self.matRotx[1][2] = sin(elapsed_time*0.5)
-        self.matRotx[2][1] = -sin(elapsed_time*0.5)
-        self.matRotx[2][2] = cos(elapsed_time*0.5)
+        self.matRotx[1][1] = cos(abs_coord_y)
+        self.matRotx[1][2] = sin(abs_coord_y)
+        self.matRotx[2][1] = -sin(abs_coord_y)
+        self.matRotx[2][2] = cos(abs_coord_y)
         self.matRotx[3][3] = 1
 
         for t in rm.RenderMath.box_mesh().vector:
@@ -86,9 +113,9 @@ class CubeRender(object):
 
             translatedTri = deepcopy(rotatedZXTri)
 
-            translatedTri.p1.z = t.p1.z + 4.0
-            translatedTri.p2.z = t.p2.z + 4.0
-            translatedTri.p3.z = t.p3.z + 4.0
+            translatedTri.p1.z = rotatedZXTri.p1.z + 4.0
+            translatedTri.p2.z = rotatedZXTri.p2.z + 4.0
+            translatedTri.p3.z = rotatedZXTri.p3.z + 4.0
 
             projectedTri = deepcopy(translatedTri)
 
