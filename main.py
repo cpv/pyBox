@@ -4,31 +4,66 @@ import time
 from typing import List
 from math import cos, tan, sin
 from copy import copy, deepcopy
+import random
+
+#================= Note to the Reader =============================
+#
+# First and formost...  Hi there! I dont know what you would 
+# be doing reading this. Just wanted to clarify a few things
+#                   if you are...
+# 1. Dont look into this for any form of accurate maths or logic
+# 2. Dont look into this for any good python practices. 
+#             (I have no experience in python whatsoever)
+# 3. Ignore my overuse of globals/dodgy messaging patterns/..
+#       bad class structure/bad practices/code dupes/other misc badboys
+# 4. This is purely just a test for me to see what limits I can push
+#       with python + tkinter. 
+#
+#                                                    Thats All :)
+#==================================================================
 
 mw = tk.Tk()
-matrixMath = rm.RenderMath().matrix
-
+global mathInstance
+global matrixMath
+global back #canvas
+wireframe_enable = True
 
 def save_size(event):
+    global mathInstance
+    global matrixMath
+    global back 
+
     with open("pythonRender.conf", "w") as conf:
         conf.write(mw.geometry())
+    #need to figure out how python handles broadcasting messages/notifications to update. 
+    mathInstance.updateRenderSize(mathInstance, back)
+    matrixMath = mathInstance.matrix
 
 
 def generate_window():
+    global mathInstance
+    global matrixMath
+    global back #canvas
 
     with open("pythonRender.conf", "r") as conf:
         geom = conf.read()
         if geom:
             mw.geometry(geom)
         else:
-            mw.geometry(str(int(rm.RenderMath.fScreenWidth)) +
-                        "x" + str(int(rm.RenderMath.fScreenHeight)))
+            mw.geometry("500x500")
     # mw.resizable(0, 0)
 
     back = tk.Canvas(master=mw, bg='black',
                      borderwidth=0, highlightthickness=0)
     back.pack_propagate(0)
     back.pack(fill=tk.BOTH, expand=1)
+    
+    #so that the screen size gets set for our matrix setup.
+    mw.update_idletasks()
+    mw.update()
+
+    mathInstance = rm.RenderMath(back)
+    matrixMath = mathInstance.matrix
 
     mw.bind("<Configure>", save_size)
 
@@ -48,32 +83,13 @@ class CubeRender(object):
     def render_cube(self):
         self.canvas.delete("all")
 
-        # #for rendering rotation with elapsed time.
-
-        # elapsed_time = time.time() - self.start_time
-        # elapsed_time /= 3
-
-        # self.matRotz[0][0] = cos(elapsed_time)
-        # self.matRotz[0][1] = sin(elapsed_time)
-        # self.matRotz[1][0] = -sin(elapsed_time)
-        # self.matRotz[1][1] = cos(elapsed_time)
-        # self.matRotz[2][2] = 1
-        # self.matRotz[3][3] = 1
-
-        # self.matRotx[0][0] = 1
-        # self.matRotx[1][1] = cos(elapsed_time*0.5)
-        # self.matRotx[1][2] = sin(elapsed_time*0.5)
-        # self.matRotx[2][1] = -sin(elapsed_time*0.5)
-        # self.matRotx[2][2] = cos(elapsed_time*0.5)
-        # self.matRotx[3][3] = 1
-
         x = mw.winfo_pointerx()
         y = mw.winfo_pointery()
         abs_coord_x = mw.winfo_pointerx() - mw.winfo_vrootx()
         abs_coord_y = mw.winfo_pointery() - mw.winfo_vrooty()
 
-        abs_coord_x/=100
-        abs_coord_y/=100
+        abs_coord_x = abs_coord_x/100
+        abs_coord_y = abs_coord_y/100
         # for rendering rotation with mousepos.
         self.matRotz[0][0] = cos(abs_coord_x)
         self.matRotz[0][1] = sin(abs_coord_x)
@@ -113,9 +129,9 @@ class CubeRender(object):
 
             translatedTri = deepcopy(rotatedZXTri)
 
-            translatedTri.p1.z = rotatedZXTri.p1.z + 4.0
-            translatedTri.p2.z = rotatedZXTri.p2.z + 4.0
-            translatedTri.p3.z = rotatedZXTri.p3.z + 4.0
+            translatedTri.p1.z = rotatedZXTri.p1.z + 8.0
+            translatedTri.p2.z = rotatedZXTri.p2.z + 8.0
+            translatedTri.p3.z = rotatedZXTri.p3.z + 8.0
 
             projectedTri = deepcopy(translatedTri)
 
@@ -135,24 +151,28 @@ class CubeRender(object):
             projectedTri.p3.x += 1.0
             projectedTri.p3.y += 1.0
 
-            projectedTri.p1.x *= 0.5 * rm.RenderMath.fScreenWidth
-            projectedTri.p1.y *= 0.5 * rm.RenderMath.fScreenHeight
-            projectedTri.p2.x *= 0.5 * rm.RenderMath.fScreenWidth
-            projectedTri.p2.y *= 0.5 * rm.RenderMath.fScreenHeight
-            projectedTri.p3.x *= 0.5 * rm.RenderMath.fScreenWidth
-            projectedTri.p3.y *= 0.5 * rm.RenderMath.fScreenHeight
+            projectedTri.p1.x *= 0.5 * mathInstance.fScreenWidth
+            projectedTri.p1.y *= 0.5 * mathInstance.fScreenHeight
+            projectedTri.p2.x *= 0.5 * mathInstance.fScreenWidth
+            projectedTri.p2.y *= 0.5 * mathInstance.fScreenHeight
+            projectedTri.p3.x *= 0.5 * mathInstance.fScreenWidth
+            projectedTri.p3.y *= 0.5 * mathInstance.fScreenHeight
 
-            self.canvas.create_line(
-                projectedTri.p1.x, projectedTri.p1.y,
-                projectedTri.p2.x, projectedTri.p2.y,  fill=projectedTri.colour)
-            self.canvas.create_line(
-                projectedTri.p2.x, projectedTri.p2.y,
-                projectedTri.p3.x, projectedTri.p3.y, fill=projectedTri.colour)
-            self.canvas.create_line(
-                projectedTri.p3.x, projectedTri.p3.y,
-                projectedTri.p1.x, projectedTri.p1.y, fill=projectedTri.colour)
+            global wireframe_enable
 
-        # time.sleep(0.1)
+            if(wireframe_enable):
+                self.canvas.create_line(
+                    projectedTri.p1.x, projectedTri.p1.y,
+                    projectedTri.p2.x, projectedTri.p2.y,  fill=projectedTri.colour)
+                self.canvas.create_line(
+                    projectedTri.p2.x, projectedTri.p2.y,
+                    projectedTri.p3.x, projectedTri.p3.y, fill=projectedTri.colour)
+                self.canvas.create_line(
+                    projectedTri.p3.x, projectedTri.p3.y,
+                    projectedTri.p1.x, projectedTri.p1.y, fill=projectedTri.colour)
+            else:
+                self.canvas.create_polygon((projectedTri.p1.x, projectedTri.p1.y, projectedTri.p2.x,
+                                            projectedTri.p2.y, projectedTri.p3.x, projectedTri.p3.y), fill=projectedTri.colour)
 
 
 def main_loop(cr):
@@ -162,12 +182,21 @@ def main_loop(cr):
         mw.update()
 
 
+def wireframe_toggle(self):
+    global wireframe_enable
+    wireframe_enable = not wireframe_enable
+
+
+def setup_keybinds():
+
+    mw.bind('<w>', wireframe_toggle)
+
+
 def main():
 
     canvas = generate_window()
     cr = CubeRender(canvas)
-
-    print(canvas)
+    setup_keybinds()
     main_loop(cr)
 
 

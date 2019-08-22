@@ -26,7 +26,7 @@ class Tri(object):
     def __str__(self):
         return 'p1:' + self.p1.__str__() + ' p2:' + self.p2.__str__() + ' p3:' + self.p3.__str__()
 
-    def __init__(self, p1=Vec3D(0, 0, 0), p2=Vec3D(0, 0, 0), p3=Vec3D(0, 0, 0), colour="#fb0"):
+    def __init__(self, p1=Vec3D(0, 0, 0), p2=Vec3D(0, 0, 0), p3=Vec3D(0, 0, 0), colour="#fff"):
         self.p1 = p1
         self.p2 = p2
         self.p3 = p3
@@ -86,16 +86,13 @@ class RenderMath(object):
     ffar = 1000.0
     ffov = 90.0
 
-    fScreenWidth = 500.0
-    fScreenHeight = 500.0
-    faspectRatio = fScreenHeight/fScreenWidth
-    ffovRad = 1.0 / tan(ffov * 0.5/180 * pi)
+    fScreenWidth = 0
+    fScreenHeight = 0
+    faspectRatio = 0
+    ffovRad = 0
     matrix = []
 
-    def __init__(self):
-        # black boxy projection matrix to do with projecting out 3d points
-        # to a space on a 2d plane. We use this primarily for our matrix multiplication.
-
+    def updateMatrixDimensions(self):
         w, h = 4, 4
         self.matrix = [[0 for x in range(w)] for y in range(h)]
 
@@ -105,6 +102,24 @@ class RenderMath(object):
         self.matrix[3][2] = (-self.ffar * self.fnear)/(self.ffar - self.fnear)
         self.matrix[2][3] = 1
         self.matrix[3][3] = 0
+
+    #public ??
+    def updateRenderSize(self, oldSelf, back):
+        oldSelf.fScreenHeight = back.winfo_height()
+        oldSelf.fScreenWidth = back.winfo_width()
+        oldSelf.faspectRatio = oldSelf.fScreenHeight/oldSelf.fScreenWidth
+        oldSelf.ffovRad = 1.0 / tan(oldSelf.ffov * 0.5/180 * pi)
+        self.updateMatrixDimensions()
+
+    def __init__(self, canvas):
+        # black boxy projection matrix to do with projecting out 3d points
+        # to a space on a 2d plane. We use this primarily for our matrix multiplication.
+        self.fScreenHeight = canvas.winfo_height()
+        self.fScreenWidth = canvas.winfo_width()
+        self.faspectRatio = self.fScreenHeight/self.fScreenWidth
+        self.ffovRad = 1.0 / tan(self.ffov * 0.5/180 * pi)
+
+        self.updateMatrixDimensions()
 
     # m: matrix vector
     # k: 3d vec 1
