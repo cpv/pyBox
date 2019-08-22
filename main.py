@@ -6,36 +6,43 @@ from math import cos, tan, sin
 from copy import copy, deepcopy
 import random
 
-#================= Note to the Reader =============================
+# ================= Note to the Reader =============================
 #
-# First and formost...  Hi there! I dont know what you would 
+# First and formost...  Hi there! I dont know what you would
 # be doing reading this. Just wanted to clarify a few things
 #                   if you are...
 # 1. Dont look into this for any form of accurate maths or logic
-# 2. Dont look into this for any good python practices. 
+# 2. Dont look into this for any good python practices.
 #             (I have no experience in python whatsoever)
 # 3. Ignore my overuse of globals/dodgy messaging patterns/..
 #       bad class structure/bad practices/code dupes/other misc badboys
 # 4. This is purely just a test for me to see what limits I can push
-#       with python + tkinter. 
+#       with python + tkinter.
 #
 #                                                    Thats All :)
-#==================================================================
+# ==================================================================
 
 mw = tk.Tk()
 global mathInstance
 global matrixMath
-global back #canvas
+global back  # canvas
+
+
+# Settings Toggles. (Should encapsulate in its own settings manager class.)
+# -- -- -- -- -- -- -- -- -- -- -- --
 wireframe_enable = True
+planar_enable = True
+# -- -- -- -- -- -- -- -- -- -- -- --
+
 
 def save_size(event):
     global mathInstance
     global matrixMath
-    global back 
+    global back
 
     with open("pythonRender.conf", "w") as conf:
         conf.write(mw.geometry())
-    #need to figure out how python handles broadcasting messages/notifications to update. 
+    # need to figure out how python handles broadcasting messages/notifications to update.
     mathInstance.updateRenderSize(mathInstance, back)
     matrixMath = mathInstance.matrix
 
@@ -43,7 +50,7 @@ def save_size(event):
 def generate_window():
     global mathInstance
     global matrixMath
-    global back #canvas
+    global back  # canvas
 
     with open("pythonRender.conf", "r") as conf:
         geom = conf.read()
@@ -57,8 +64,8 @@ def generate_window():
                      borderwidth=0, highlightthickness=0)
     back.pack_propagate(0)
     back.pack(fill=tk.BOTH, expand=1)
-    
-    #so that the screen size gets set for our matrix setup.
+
+    # so that the screen size gets set for our matrix setup.
     mw.update_idletasks()
     mw.update()
 
@@ -80,7 +87,35 @@ class CubeRender(object):
 
         self.start_time = time.time()
 
+    def multiplyByMatrix(self, ti, to, m):
+        rm.RenderMath.multiplyMatrixVector(
+            ti.p1, to.p1, m)
+        rm.RenderMath.multiplyMatrixVector(
+            ti.p2, to.p2, m)
+        rm.RenderMath.multiplyMatrixVector(
+            ti.p3, to.p3, m)
+
+    def project_to_dimensions(self,tri):
+        tri.p1.x += 1.0
+        tri.p1.y += 1.0
+
+        tri.p2.x += 1.0
+        tri.p2.y += 1.0
+
+        tri.p3.x += 1.0
+        tri.p3.y += 1.0
+
+        tri.p1.x *= 0.5 * mathInstance.fScreenWidth
+        tri.p1.y *= 0.5 * mathInstance.fScreenHeight
+        tri.p2.x *= 0.5 * mathInstance.fScreenWidth
+        tri.p2.y *= 0.5 * mathInstance.fScreenHeight
+        tri.p3.x *= 0.5 * mathInstance.fScreenWidth
+        tri.p3.y *= 0.5 * mathInstance.fScreenHeight
+
     def render_cube(self):
+
+        global planar_enable
+
         self.canvas.delete("all")
 
         x = mw.winfo_pointerx()
@@ -106,27 +141,12 @@ class CubeRender(object):
         self.matRotx[3][3] = 1
 
         for t in rm.RenderMath.box_mesh().vector:
-
             # todo: express this better.
-
+            # todo: translation helper functions.
             rotatedZTri = deepcopy(t)
-
-            rm.RenderMath.multiplyMatrixVector(
-                t.p1, rotatedZTri.p1, self.matRotz)
-            rm.RenderMath.multiplyMatrixVector(
-                t.p2, rotatedZTri.p2, self.matRotz)
-            rm.RenderMath.multiplyMatrixVector(
-                t.p3, rotatedZTri.p3, self.matRotz)
-
+            self.multiplyByMatrix(t, rotatedZTri, self.matRotz)
             rotatedZXTri = deepcopy(rotatedZTri)
-
-            rm.RenderMath.multiplyMatrixVector(
-                rotatedZTri.p1, rotatedZXTri.p1, self.matRotx)
-            rm.RenderMath.multiplyMatrixVector(
-                rotatedZTri.p2, rotatedZXTri.p2, self.matRotx)
-            rm.RenderMath.multiplyMatrixVector(
-                rotatedZTri.p3, rotatedZXTri.p3, self.matRotx)
-
+            self.multiplyByMatrix(rotatedZTri, rotatedZXTri, self.matRotx)
             translatedTri = deepcopy(rotatedZXTri)
 
             translatedTri.p1.z = rotatedZXTri.p1.z + 8.0
@@ -134,29 +154,27 @@ class CubeRender(object):
             translatedTri.p3.z = rotatedZXTri.p3.z + 8.0
 
             projectedTri = deepcopy(translatedTri)
+            self.multiplyByMatrix(translatedTri, projectedTri, matrixMath)
 
-            rm.RenderMath.multiplyMatrixVector(
-                translatedTri.p1, projectedTri.p1, matrixMath)
-            rm.RenderMath.multiplyMatrixVector(
-                translatedTri.p2, projectedTri.p2, matrixMath)
-            rm.RenderMath.multiplyMatrixVector(
-                translatedTri.p3, projectedTri.p3, matrixMath)
 
-            projectedTri.p1.x += 1.0
-            projectedTri.p1.y += 1.0
+            self.project_to_dimensions(projectedTri)
+            global planar_enable
 
-            projectedTri.p2.x += 1.0
-            projectedTri.p2.y += 1.0
-
-            projectedTri.p3.x += 1.0
-            projectedTri.p3.y += 1.0
-
-            projectedTri.p1.x *= 0.5 * mathInstance.fScreenWidth
-            projectedTri.p1.y *= 0.5 * mathInstance.fScreenHeight
-            projectedTri.p2.x *= 0.5 * mathInstance.fScreenWidth
-            projectedTri.p2.y *= 0.5 * mathInstance.fScreenHeight
-            projectedTri.p3.x *= 0.5 * mathInstance.fScreenWidth
-            projectedTri.p3.y *= 0.5 * mathInstance.fScreenHeight
+            if planar_enable:
+                # generate plane on d,0,d
+                # planar_enable = False
+                d = 10
+                for x in range(d):
+                    gridTri = rm.Tri(rm.Vec3D(0, x, -2), rm.Vec3D(0, x, 2))
+                    gridZRotate = deepcopy(gridTri)
+                    self.multiplyByMatrix(gridTri, gridZRotate, self.matRotz)
+                    gridZXRotate = deepcopy(gridZRotate)
+                    self.multiplyByMatrix(gridZRotate, gridZXRotate, self.matRotx)
+                    # gridTranslate = deepcopy(rotatedZXTri)
+                    self.project_to_dimensions(gridZXRotate)
+                    self.canvas.create_line(
+                        gridZXRotate.p1.x, gridZXRotate.p1.y,
+                        gridZXRotate.p2.x, gridZXRotate.p2.y,  fill="#1d1d1d")
 
             global wireframe_enable
 
@@ -182,14 +200,23 @@ def main_loop(cr):
         mw.update()
 
 
+# make a generic settings toggle for things like this.
+# -- -- -- -- -- -- --
 def wireframe_toggle(self):
     global wireframe_enable
     wireframe_enable = not wireframe_enable
 
 
+def planar_toggle(self):
+    global planar_enable
+    planar_enable = not planar_enable
+# -- -- -- -- -- -- --
+
+
 def setup_keybinds():
 
     mw.bind('<w>', wireframe_toggle)
+    mw.bind('<p>', planar_toggle)
 
 
 def main():
