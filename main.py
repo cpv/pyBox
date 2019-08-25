@@ -95,7 +95,16 @@ class CubeRender(object):
         rm.RenderMath.multiplyMatrixVector(
             ti.p3, to.p3, m)
 
-    def project_to_dimensions(self,tri):
+    # where object is a matrix that represents a set of points to make a mesh.
+    def apply_rotational_geometry(self, vertex):
+        gridZRotate = deepcopy(vertex)
+        self.multiplyByMatrix(vertex, gridZRotate, self.matRotz)
+        gridZXRotate = deepcopy(gridZRotate)
+        self.multiplyByMatrix(gridZRotate, gridZXRotate, self.matRotx)
+        self.project_to_dimensions(gridZXRotate)
+        return gridZXRotate
+
+    def project_to_dimensions(self, tri):
         tri.p1.x += 1.0
         tri.p1.y += 1.0
 
@@ -149,13 +158,12 @@ class CubeRender(object):
             self.multiplyByMatrix(rotatedZTri, rotatedZXTri, self.matRotx)
             translatedTri = deepcopy(rotatedZXTri)
 
-            translatedTri.p1.z = rotatedZXTri.p1.z + 8.0
-            translatedTri.p2.z = rotatedZXTri.p2.z + 8.0
-            translatedTri.p3.z = rotatedZXTri.p3.z + 8.0
+            translatedTri.p1.z = rotatedZXTri.p1.z + 3.0
+            translatedTri.p2.z = rotatedZXTri.p2.z + 3.0
+            translatedTri.p3.z = rotatedZXTri.p3.z + 3.0
 
             projectedTri = deepcopy(translatedTri)
             self.multiplyByMatrix(translatedTri, projectedTri, matrixMath)
-
 
             self.project_to_dimensions(projectedTri)
             global planar_enable
@@ -163,18 +171,22 @@ class CubeRender(object):
             if planar_enable:
                 # generate plane on d,0,d
                 # planar_enable = False
-                d = 10
-                for x in range(d):
-                    gridTri = rm.Tri(rm.Vec3D(0, x, -2), rm.Vec3D(0, x, 2))
-                    gridZRotate = deepcopy(gridTri)
-                    self.multiplyByMatrix(gridTri, gridZRotate, self.matRotz)
-                    gridZXRotate = deepcopy(gridZRotate)
-                    self.multiplyByMatrix(gridZRotate, gridZXRotate, self.matRotx)
-                    # gridTranslate = deepcopy(rotatedZXTri)
-                    self.project_to_dimensions(gridZXRotate)
+
+                for x in range(-10,10,1):
+                    x /= 2
+                    #todo: figure out grid math.
+                    gridTriVert = rm.Tri(rm.Vec3D(0, x, -2), rm.Vec3D(0, x, 2))
+                    gridTriHori = rm.Tri(rm.Vec3D(0, -2, x), rm.Vec3D(0, 2, x))
+                    gridTriVert = self.apply_rotational_geometry(
+                        vertex=gridTriVert)
+                    gridTriHori = self.apply_rotational_geometry(
+                        vertex=gridTriHori)
                     self.canvas.create_line(
-                        gridZXRotate.p1.x, gridZXRotate.p1.y,
-                        gridZXRotate.p2.x, gridZXRotate.p2.y,  fill="#1d1d1d")
+                        gridTriVert.p1.x, gridTriVert.p1.y,
+                        gridTriVert.p2.x, gridTriVert.p2.y,  fill="#1d1d1d")
+                    self.canvas.create_line(
+                        gridTriHori.p1.x, gridTriHori.p1.y,
+                        gridTriHori.p2.x, gridTriHori.p2.y,  fill="#1d1d1d")
 
             global wireframe_enable
 
@@ -198,6 +210,7 @@ def main_loop(cr):
         cr.render_cube()
         mw.update_idletasks()
         mw.update()
+        # time.sleep(1./25)
 
 
 # make a generic settings toggle for things like this.
