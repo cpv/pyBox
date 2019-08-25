@@ -4,13 +4,11 @@ import time
 from typing import List
 from math import cos, tan, sin
 from copy import copy, deepcopy
-import random
 
 # ================= Note to the Reader =============================
 #
 # First and formost...  Hi there! I dont know what you would
-# be doing reading this. Just wanted to clarify a few things
-#                   if you are...
+# be doing reading this. Just wanted to clarify a few things if you are...
 # 1. Dont look into this for any form of accurate maths or logic
 # 2. Dont look into this for any good python practices.
 #             (I have no experience in python whatsoever)
@@ -19,7 +17,12 @@ import random
 # 4. This is purely just a test for me to see what limits I can push
 #       with python + tkinter.
 #
-#                                                    Thats All :)
+#
+# UPDATE:
+# My laptop started getting really hot so I think im gonna switch out 
+# and try something else to make this in. Preferably not tkinter ;)
+#
+#
 # ==================================================================
 
 mw = tk.Tk()
